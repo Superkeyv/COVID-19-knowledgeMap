@@ -1,0 +1,8 @@
+README.md
+setup.py
+Knowledge_map.egg-info/PKG-INFO
+Knowledge_map.egg-info/SOURCES.txt
+Knowledge_map.egg-info/dependency_links.txt
+Knowledge_map.egg-info/entry_points.txt
+Knowledge_map.egg-info/requires.txt
+Knowledge_map.egg-info/top_level.txt

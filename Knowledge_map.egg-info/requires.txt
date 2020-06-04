@@ -1,0 +1,7 @@
+django==2.2
+
+[dev]
+pytest
+webtest
+django-livereload-server
+django-debug-toolbar
