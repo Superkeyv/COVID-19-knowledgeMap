@@ -1,7 +1,9 @@
 django==2.2
+beautifulsoup4
 
 [dev]
 pytest
 webtest
 django-livereload-server
 django-debug-toolbar
+django-cors-headers

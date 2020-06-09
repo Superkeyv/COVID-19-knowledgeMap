@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'livereload',
     'debug_toolbar',
     'Entry_FW.apps.Entry_FWConfig',
@@ -52,6 +53,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'livereload.middleware.LiveReloadScript',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'Knowledge_map.urls'
@@ -129,4 +131,13 @@ STATIC_URL = '/static/'
 # 自我补充内容
 INTERNAL_IPS=[
     '127.0.0.1',
+]
+
+CORS_ORIGIN_ALLOW_ALL = True	# 所有人
+
+CORS_ORIGIN_WHITELIST = [
+    "https://example.com",
+    "https://sub.example.com",
+    "http://localhost:8080",
+    "http://127.0.0.1:8000",
 ]

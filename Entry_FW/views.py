@@ -1,55 +1,163 @@
 # Create your views here.
-from django.http import HttpResponse, Http404, HttpResponseRedirect
+from django.http import HttpResponse, Http404, HttpResponseRedirect,JsonResponse
 from django.template import loader
 from django.shortcuts import render, get_object_or_404
-from django.urls import reverse
-from django.views import generic
-from django.utils import timezone
+from .apps import Entry_FWConfig
+from urllib import request as rq
+import json
 
-class container_abstract():
-    def __init__(self,template_path):
-        self.container=loader.get_template(template_path)
-        self.context={"test":1,}
+app_name = Entry_FWConfig.name
 
-    def default_template(self):
-        return self.container.render(self.context)
-
-
+# 一些获取信息的链接
+# json格式的实时状况数据，包括国内和国外情况，国外部分位于 'thertotal'
+rtjson = 'https://news.sina.com.cn/project/fymap/ncp2020_full_data.json?_=1591602512921&callback=jsoncallback'
+# 实时新闻信息
+rtnews = 'https://interface.sina.cn/news/country_epidemic_lists.d.json?page=1&pagesize=3&callback=country_epidemic&_=1591602512910'
+# 湖北省历史数据
+his_province = 'https://gwpre.sina.cn/interface/news/ncp/data.d.json?mod=china_hubei_history&callback=hbApi_data&_=1591602512906'
 
 
 def index(request):
-    template = loader.get_template('Entry_FW/index.html')
-    container=container_abstract('Entry_FW/container_template.html')
+    '''
+    初始化页面，用于显示摘要信息
+    :param request:
+    :return:
+    '''
+    template = loader.get_template(app_name + '/index.html')
 
     # (菜单名,图标), {菜单项:urls,...}
-    mproject1=(('工作','fa-cog'),
-               {'关键词图谱':'url1','研究者':'url2','病毒机理':'url3'})
-    mproject2=(('成果','fa-wrench'),
-               {'知识体系':'url1','医学术语表':'url2','药物关联':'url3'})
+    mproject1 = (('工作', 'fa-cog'),
+                 {'关键词图谱': 'keywordmap', '研究者': 'researcher', '病毒机理': 'url3'})
+    mproject2 = (('成果', 'fa-wrench'),
+                 {'知识体系': 'url1', '医学术语表': 'url2', '药物关联': 'url3'})
     # [(文字，图，url),...]
-    rt_info=[('疫情趋势','fa-chart-area','url1'),('各国数据','fa-table','url2')]
+    rt_info = [('疫情趋势', 'fa-chart-area', 'rtinfo'), ('各国数据', 'fa-table', 'url2')]
 
     context = {
         'title': 'COVID-19知识图谱',
-        'projects':[mproject1,mproject2],
-        'rt_info':rt_info,
-        'container':container.default_template()
+        'projects': [mproject1, mproject2],
+        'rt_info': rt_info,
+        'container': abstractpage(None)
     }
     return HttpResponse(template.render(context, request))
 
 
+def abstractpage(request):
+    '''
+    摘要页面，提供摘要信息的提取
+    注意，其中的color项，包括有 color=(primary,success,info,warning,danger,secondary)
+    :param request:
+    :return:
+    '''
+    r = rq.urlopen(rtjson)
+    rec = str(r.read())
+    json_str = json.loads(rec[15:-3])  # 由于包含一些不合适的字符，在这里需要去掉
+    othertotal = json_str['data']['othertotal']
 
-#
-# def detail(request, question_id):
-#     # try:
-#     #     question = Question.objects.get(pk=question_id)
-#     # except Question.DoesNotExist:
-#     #     raise Http404("Question does not exist")
-#     question = get_object_or_404(Question, pk=question_id)
-#     return render(request, 'Entry_FW/detail.html', {'question': question})
-#
-#
-# def results(request, question_id):
-#     question = get_object_or_404(Question, pk=question_id)
-#     return render(request, 'Entry_FW/results.html', {'question': question})
+    container = loader.get_template(app_name + '/cont_abstract.html')
+    dataset = [('累积确诊', othertotal['certain'], 'primary'),
+               ('现有确诊', int(othertotal['certain']) - int(othertotal['die']) - int(othertotal['recure']), 'info'),
+               ('死亡', othertotal['die'], 'warning'),
+               ('累积治愈', othertotal['recure'], 'success')]
 
+    projects = [('疫苗研发', 20, 'primary'),
+                ('病理研究', 50, 'success'),
+                ('临床救治', 70, 'info'),
+                ('医用物资生产', 30, 'warning'), ]
+    context = {
+        "dataset": dataset,
+        "project": projects,
+    }
+    if request == None:
+        return container.render(context)
+    else:
+        return HttpResponse(container.render(context, request))
+
+
+def rtinfo(request):
+    '''
+    实时信息显示，从api接口获取实时疫情信息，并显示在此。这里使用了其他网站的数据，直接渲染至此
+    :param request:
+    :return:
+    '''
+    r = rq.urlopen(rtjson)
+    rec = str(r.read())
+    json_str = json.loads(rec[15:-3])  # 由于包含一些不合适的字符，在这里需要去掉
+
+    othertotal = json_str['data']['othertotal']
+    container = loader.get_template(app_name + '/cont_rtinfo.html')
+    dataset = [('累积确诊', othertotal['certain'], 'primary'),
+               ('现有确诊', int(othertotal['certain']) - int(othertotal['die']) - int(othertotal['recure']), 'info'),
+               ('死亡', othertotal['die'], 'warning'),
+               ('累积治愈', othertotal['recure'], 'success')]
+
+    context = {
+        'dataset': dataset,
+
+    }
+    return HttpResponse(container.render(context, request))
+
+
+def researcher(request):
+    '''
+    研究者信息整理
+    :param request:
+    :return:
+    '''
+    container = loader.get_template(app_name + '/cont_researcher.html')
+    return HttpResponse(container.render())
+
+
+def keywordmappage(request):
+    '''
+    关键词图谱页面
+    :param request:
+    :return:
+    '''
+    container = loader.get_template(app_name + '/cont_keywordmap.html')
+    return HttpResponse(container.render())
+
+
+def keywordmapdata(request):
+    '''
+    用于生成关系图绘图所需的数据
+    :param request:
+    :return:
+    '''
+    with open('Entry_FW/static/json/样例data.json') as fw:
+        js_json = json.loads(fw.read())['r']
+
+        # # 检查所有的实体，以及引用次数
+        # category = {}
+        # data = []
+        # # 处理所有的关系
+        # links = []
+        #
+        # for item in js_json:
+        #     s = item['sourceNode']
+        #     t = item['targetNode']
+        #     r = item['relationName']
+        #
+        #     if s not in category.keys():
+        #         category[s] = 1
+        #     else:
+        #         category[s] += 1
+        #     if t not in category.keys():
+        #         category[t] = 1
+        #     else:
+        #         category[s] += 1
+        #
+        #     tmp={'source':s,'target':t,'name':}
+        #
+        # # 处理data信息
+        # for index, c in enumerate(category):
+        #     tmp={'name':c,'des':'','symbolSize':category[c],'category':index}
+        #     data.append(tmp)
+        #
+        # fdata['categories'] = category.keys()
+        # fdata['data'] = data
+        # fdata['links'] = links
+
+        # 下发绘图
+
+    return JsonResponse(js_json,safe=False)
