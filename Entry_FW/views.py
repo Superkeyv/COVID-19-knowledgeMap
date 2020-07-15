@@ -1,10 +1,14 @@
 # Create your views here.
-from django.http import HttpResponse, Http404, HttpResponseRedirect,JsonResponse
+from django.http import HttpResponse, Http404, HttpResponseRedirect, JsonResponse
 from django.template import loader
 from django.shortcuts import render, get_object_or_404
 from .apps import Entry_FWConfig
 from urllib import request as rq
+from django.conf import settings
 import json
+
+# 加载esAPI模块
+from esAPI.covidapi import *
 
 app_name = Entry_FWConfig.name
 
@@ -17,6 +21,47 @@ rtnews = 'https://interface.sina.cn/news/country_epidemic_lists.d.json?page=1&pa
 his_province = 'https://gwpre.sina.cn/interface/news/ncp/data.d.json?mod=china_hubei_history&callback=hbApi_data&_=1591602512906'
 
 
+def test(request):
+    '''
+    用于前端调试Debug页面
+    :param request:
+    :return:
+    '''
+    if (not settings.DEBUG):
+        return Http404()
+    template = loader.get_template('test.html')
+    return HttpResponse(template.render())
+
+
+def default_mainpage_data():
+    '''
+    抛弃使用
+
+    :return:
+    '''
+    # (菜单名,图标), {菜单项:urls,...}
+    mproject1 = (('工作', 'fa-cog'),
+                 {'关键词图谱': 'keywordmap', '文献检索': 'researcher', })
+    mproject2 = (('成果', 'fa-wrench'),
+                 {'知识体系': 'url1', '医学术语表': 'url2', '药物关联': 'url3'})
+    # [(文字，图，url),...]
+    # rt_info = [('疫情趋势', 'fa-chart-area', 'rtinfo'), ('各国数据', 'fa-table', 'url2')]
+
+    context = {
+        'title': 'COVID-19知识图谱',
+        'projects': [
+            mproject1,
+            # mproject2,
+        ],
+        # 'rt_info': rt_info,
+        'container': abstractpage(None)
+        # 'container': researcher(None)
+    }
+
+    return context
+
+
+
 def index(request):
     '''
     初始化页面，用于显示摘要信息
@@ -27,19 +72,13 @@ def index(request):
 
     # (菜单名,图标), {菜单项:urls,...}
     mproject1 = (('工作', 'fa-cog'),
-                 {'关键词图谱': 'keywordmap', '研究者': 'researcher', '病毒机理': 'url3'})
+                 {'关键词图谱': 'keywordmap', '文献检索': 'researcher', })
     mproject2 = (('成果', 'fa-wrench'),
                  {'知识体系': 'url1', '医学术语表': 'url2', '药物关联': 'url3'})
     # [(文字，图，url),...]
-    rt_info = [('疫情趋势', 'fa-chart-area', 'rtinfo'), ('各国数据', 'fa-table', 'url2')]
+    # rt_info = [('疫情趋势', 'fa-chart-area', 'rtinfo'), ('各国数据', 'fa-table', 'url2')]
 
-    context = {
-        'title': 'COVID-19知识图谱',
-        'projects': [mproject1, mproject2],
-        'rt_info': rt_info,
-        'container': abstractpage(None)
-    }
-    return HttpResponse(template.render(context, request))
+    return HttpResponse(template.render(default_mainpage_data(), request))
 
 
 def abstractpage(request):
@@ -66,7 +105,7 @@ def abstractpage(request):
                 ('医用物资生产', 30, 'warning'), ]
     context = {
         "dataset": dataset,
-        "project": projects,
+        # "project": projects,
     }
     if request == None:
         return container.render(context)
@@ -100,22 +139,23 @@ def rtinfo(request):
 
 def researcher(request):
     '''
-    研究者信息整理
+    研究成果信息整理
     :param request:
     :return:
     '''
     container = loader.get_template(app_name + '/cont_researcher.html')
+
     return HttpResponse(container.render())
 
 
 def keywordmappage(request):
     '''
-    关键词图谱页面
+    关键词图谱页面，与主界面内容一致
     :param request:
     :return:
     '''
     container = loader.get_template(app_name + '/cont_keywordmap.html')
-    return HttpResponse(container.render())
+    return HttpResponse(container.render(default_mainpage_data(), request))
 
 
 def keywordmapdata(request):
@@ -124,40 +164,41 @@ def keywordmapdata(request):
     :param request:
     :return:
     '''
-    with open('Entry_FW/static/json/样例data.json') as fw:
-        js_json = json.loads(fw.read())['r']
+    relation = read_relation()
 
-        # # 检查所有的实体，以及引用次数
-        # category = {}
-        # data = []
-        # # 处理所有的关系
-        # links = []
-        #
-        # for item in js_json:
-        #     s = item['sourceNode']
-        #     t = item['targetNode']
-        #     r = item['relationName']
-        #
-        #     if s not in category.keys():
-        #         category[s] = 1
-        #     else:
-        #         category[s] += 1
-        #     if t not in category.keys():
-        #         category[t] = 1
-        #     else:
-        #         category[s] += 1
-        #
-        #     tmp={'source':s,'target':t,'name':}
-        #
-        # # 处理data信息
-        # for index, c in enumerate(category):
-        #     tmp={'name':c,'des':'','symbolSize':category[c],'category':index}
-        #     data.append(tmp)
-        #
-        # fdata['categories'] = category.keys()
-        # fdata['data'] = data
-        # fdata['links'] = links
+    return JsonResponse(relation, safe=False)
 
-        # 下发绘图
 
-    return JsonResponse(js_json,safe=False)
+def request_doclist(request):
+    '''
+    用于响应用户的POST请求，同时根据用户的参数，返回所需的json信息
+
+    :param request:
+    :return:
+    '''
+    if (request.method == "POST"):
+        mode = request.POST['mode']
+        info = request.POST['info']
+
+        #     booldata={
+        #         "doc_class": "a",
+        #         "entity": "mpro"
+        #     }
+        if ("check_class" == mode):
+            return JsonResponse(searchfilter_engine({"doc_class": info}), safe=False)
+
+        if ("check_entry" == mode):
+            return JsonResponse(searchfilter_engine({"entity": info}), safe=False)
+
+
+def request_graph(request):
+    '''
+    返回对图的查询信息
+    :param request:
+    :return:
+    '''
+    if (request.method == "POST"):
+        info = request.POST['info']
+
+        res = get_graph(info)
+        return JsonResponse(res, safe=False)

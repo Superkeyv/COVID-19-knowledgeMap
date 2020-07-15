@@ -114,14 +114,15 @@
       <div id="content">
 
         <!-- Topbar -->
-        <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+        {% comment %} <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow"> {% endcomment %}
+        <nav class="navbar navbar-expand navbar-light bg-white mb-4 static-top shadow">
 
           <!-- Sidebar Toggle (Topbar) -->
-          <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+          {% comment %} <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
             <i class="fa fa-bars"></i>
-          </button>
+          </button> {% endcomment %}
 
-          <!-- Topbar Search -->
+          {% comment %} <!-- Topbar Search -->
           <form class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
             <div class="input-group">
               <input type="text" class="form-control bg-light border-0 small" placeholder="Search for..."
@@ -132,7 +133,7 @@
                 </button>
               </div>
             </div>
-          </form>
+          </form> {% endcomment %}
 
           {% comment %} 用户登录部分，这里不加以显示
           <!-- Topbar Navbar -->
@@ -371,15 +372,15 @@
   <script src="{% static 'js/sb-admin-2.min.js'%}"></script>
 
   <!-- Page level plugins -->
-  <script src="{% static 'vendor/chart.js/Chart.min.js'%}"></script>
+  {% comment %} <script src="{% static 'vendor/chart.js/Chart.min.js'%}"></script> {% endcomment %}
 
   <!-- Page level custom scripts -->
-  <script src="{% static 'js/demo/chart-area-demo.js'%}"></script>
-  <script src="{% static 'js/demo/chart-pie-demo.js'%}"></script>
+  {% comment %} <script src="{% static 'js/demo/chart-area-demo.js'%}"></script>
+  <script src="{% static 'js/demo/chart-pie-demo.js'%}"></script> {% endcomment %}
 
   {% comment %} 用户级别的事件代码 {% endcomment %}
+  {% comment %} <script src="{% static 'Entry_FW/js/keywordmap.js' %}" type="text/javascript"></script> {% endcomment %}
   <script src="{% static 'Entry_FW/js/sidebar.js' %}"></script>
-  <script src="{% static 'Entry_FW/js/keywordmap.js' %}"></script>
 
 </body>
 

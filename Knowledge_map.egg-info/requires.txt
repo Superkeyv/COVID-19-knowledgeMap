@@ -1,5 +1,5 @@
 django==2.2
-beautifulsoup4
+beautifulsoup4==4.9.1
 
 [dev]
 pytest

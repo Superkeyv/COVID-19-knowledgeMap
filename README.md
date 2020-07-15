@@ -19,7 +19,7 @@ pip install -e .
 使用命令，安装开发环境依赖库
 
 ```
-pip install -e . "[env]"
+pip install -e . "[dev]"
 ```
 
 

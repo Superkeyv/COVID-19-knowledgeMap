@@ -1,60 +1,64 @@
-var myChart = echarts.init(document.getElementById('keywordmap'))
 
-myChart.showLoading();
 
-$.getJSON("http://localhost:8000/keywordrel_data", function (data) {
+$.getJSON("/keywordrel_data", function (data) {
+
+    map_obj = document.getElementById("keywordmap")
+    if (null == map_obj) return;
+
+    var myChart = echarts.init(map_obj)
+
+    myChart.showLoading();
+
+
+    console.log('render keymap')
+
+    nodes_keys = Object.keys(data)
+    nodes_num = nodes_keys.length
 
     myChart.hideLoading();
-    var categories = []
-    var col_node = [] //记录所有节点，以及入点出点数目
 
-    for (var i = 0; i < 9; i++) {
+    var categories = nodes_keys
+
+    for (var i = 0; i < nodes_num; i++) {
         categories[i] = {
-            name: '类目' + i
+            name: nodes_keys[i]
         };
     }
 
     var links = []
-    data.forEach(element => {
-        s = element['soureNode']
-        t = element['targetNode']
-        r = element['relationName']
 
-        if (s in col_node) {
-            col_node[s] += 1
-        } else {
-            col_node[s] = 1
-        }
-        if (t in col_node) {
-            col_node[t] += 1
-        } else {
-            col_node[t] = 1
-        }
+    for (var i = 0; i < nodes_num; i++) {
+        element = data[nodes_keys[i].name]
 
-        //处理links问题
-        links.push({
-            source: s,
-            target: t,
-            name: r,
-            des: ''
+
+        element.forEach(tar => {
+            //处理links问题
+            links.push({
+                source: tar['sourceNode'],
+                target: tar['targetNode'],
+                name: tar['related entity'],
+                des: '',
+                // des: tar['value'],
+            })
         })
-    });
+    }
+
 
     //处理节点问题
     var node = []
     var i = 0
-    for (const key in col_node) {
-        if (col_node.hasOwnProperty(key)) {
-            const element = col_node[key];
-            l_size = 40
-            if (element > 200) l_size += 80
-            else l_size += element
-            node[i++] = {
-                name: key,
-                des: '',
-                symbolSize: l_size,
-                category: i % 9,
-            }
+    for (i = 0; i < nodes_num; i++) {
+        key = nodes_keys[i].name
+
+        element = data[key]
+        node[i] = {
+            name: key,
+            // des:20,
+            // symbolSize:Object.keys(element).length,
+            symbolSize: 9,
+            category: key,   //会不会因为数字的原因无法加载
+            //新增的一些特性
+            draggable: "true",
         }
     }
 
@@ -62,36 +66,50 @@ $.getJSON("http://localhost:8000/keywordrel_data", function (data) {
     option = {
         // 图的标题
         title: {
-            text: 'ECharts 关系图'
+            // text: 'ECharts 关系图'
         },
         // 提示框的配置
         tooltip: {},
         // 工具箱
-        // toolbox: {
-        //     // 显示工具箱
-        //     show: true,
-        //     feature: {
-        //         mark: {
-        //             show: true
-        //         },
-        //         // 还原
-        //         restore: {
-        //             show: true
-        //         },
-        //         // 保存为图片
-        //         saveAsImage: {
-        //             show: true
-        //         }
-        //     }
-        // },
+        toolbox: {
+            // 显示工具箱
+            show: true,
+            feature: {
+                mark: {
+                    show: true
+                },
+                // 还原
+                restore: {
+                    show: true
+                },
+                // 保存为图片
+                saveAsImage: {
+                    show: true
+                }
+            }
+        },
         legend: [{
-            // selectedMode: 'single',
             data: categories.map(function (a) {
                 return a.name;
-            })
+            }),
+
+            selectedMode: 'false',
+            tooltip: {
+                show: true
+            },
+            bottom: 20,
+            data: categories,
+
         }],
-        animationDuration: 1500,
+        animationDuration: 3000,
         animationEasingUpdate: 'quinticInOut',
+        backgroundColor: new echarts.graphic.RadialGradient(0.3, 0.3, 0.8, [{
+            offset: 0,
+            color: '#f7f8fa'
+        }, {
+            offset: 1,
+            color: '#cdd0d5'
+        }]),
         series: [{
             name: '关键词',
             // 数据
@@ -101,8 +119,10 @@ $.getJSON("http://localhost:8000/keywordrel_data", function (data) {
 
             type: 'graph', // 类型:关系图
             layout: 'force', //图的布局，类型为力导图
-            symbolSize: 40, // 调整节点的大小
+            symbolSize: 30, // 调整节点的大小
             roam: true, // 是否开启鼠标缩放和平移漫游。默认不开启。如果只想要开启缩放或者平移,可以设置成 'scale' 或者 'move'。设置成 true 为都开启
+            draggable: true,
+            focusNodeAdjacency: true,
 
             //stype2
             label: {
@@ -117,10 +137,28 @@ $.getJSON("http://localhost:8000/keywordrel_data", function (data) {
                 rotateLabel: true
             },
             force: {
-                repulsion: 100
-            }
+                repulsion: 50,
+                edgeLength: [10, 50],
+                friction: 0.5,
 
-            //style1
+            },
+            label: {
+                normal: {
+                    show: true,
+                    position: 'top',
+                    textstyle: {},
+                }
+            },
+            lineStyle: {
+                normal: {
+                    color: 'source',
+                    curveness: 0,
+                    type: "solid"
+                }
+            },
+
+
+            // //style1
             // edgeSymbol: ['circle', 'arrow'],
             // edgeSymbolSize: [2, 10],
             // edgeLabel: {

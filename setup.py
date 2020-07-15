@@ -2,7 +2,8 @@ from setuptools import setup
 
 # 列出软件包的相关依赖，可以通过'pip install -e’查看
 requires = ['django==2.2',
-            'beautifulsoup4',
+            'beautifulsoup4==4.9.1',
+            'requests',
             ]
 
 # 开发人员需要的依赖，`pip install -e ".[dev]"`查看
