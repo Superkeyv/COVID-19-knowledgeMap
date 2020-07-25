@@ -1,5 +1,15 @@
 {% load static %}
 
+<!-- Custom fonts for this template-->
+<link href="{% static 'vendor/fontawesome-free/css/all.min.css' %}" rel="stylesheet" type="text/css">
+<link
+  href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+  rel="stylesheet">
+
+<!-- Custom styles for this template-->
+<link href="{% static 'css/sb-admin-2.min.css' %}" rel="stylesheet">
+
+
 <script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
 <script src="{% static  'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 
@@ -30,7 +40,7 @@
 
 
 {% comment %} 用于构建研究者关系页面 {% endcomment %}
-
+{% comment %}
 
 <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
 
@@ -101,3 +111,66 @@
 
 
 <script src="{% static 'Entry_FW/js/search_tool.js' %}"></script>
+{% endcomment %}
+
+
+{% comment %} 测试文献列表显示功能 {% endcomment %}
+
+
+
+
+<dl class="articleBox" style="display: block;">
+  <style type="text/css">
+    a {
+      margin: 7px;
+      border-bottom-color: rgb(169,182,181);
+      border-bottom-style: dotted;
+      border-bottom-width: 1px;
+      display: inline;
+    }
+  </style>
+
+  <dt class="mb5">
+    <a class="toe" target="_blank" onclick="">
+      [Research progress of the impact of COVID-19 outbreak on people living with HIV].
+    </a>
+  </dt>
+
+  <dd class="sel"></dd>
+  <dd class="actor-dd">
+    <a target="_blank" title="Zhonghua liu xing bing xue za zhi = Zhonghua liuxingbingxue zazhi;">
+      《Zhonghua liu xing bing xue za zhi = Zhonghua liuxingbingxue zazhi》
+    </a>
+
+    <a target="_blank" href="">
+      National Center for AIDS/STD Control and Prevention, Chinese Center for Disease Control and Prevention, Beijing
+      102206, China.
+    </a>
+
+    <strong class="vm">作者：</strong>
+    <a target="_blank" title="F F Chen;">F F Chen</a>
+    <a target="_blank" title="H L Tang;">H L Tang</a>
+    <a target="_blank" title="P Lyu;">P Lyu</a>
+    <span class="br">-</span><a href="">《[Beijing] : Zhonghua yi xue hui; Zhongguo yi xue ke xue yuan Liu xing bing xue
+      wei sheng wu xue yan jiu suo, [1981-》</a>
+  </dd>
+  <dd class="magazine_qs">2020年第41卷第0期</dd>
+  <dd><span class="grye">The rapid spread of COVID-19 global outbreak will inevitably pose great challenges for public
+      health and medical care, especially for major concerns of public health such as HIV. In the light of the C...<a
+        class="show-all">显示全部</a></span></dd>
+  <dd class="key_word">
+    <span class="subject">
+      <strong>主题词：</strong>
+      <a href="" target="_blank" title="COVID-19">
+        COVID-19
+      </a>
+      <a href="" target="_blank" title="HIV/AIDS">
+        HIV/AIDS
+      </a> 
+      <a href="" target="_blank" title="Impact">
+        Impact
+      </a>
+    </span>
+  </dd>
+
+</dl>

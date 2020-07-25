@@ -6,6 +6,7 @@ from .apps import Entry_FWConfig
 from urllib import request as rq
 from django.conf import settings
 import json
+from django.views.decorators.csrf import csrf_exempt
 
 # 加载esAPI模块
 from esAPI.covidapi import *
@@ -41,7 +42,7 @@ def default_mainpage_data():
     '''
     # (菜单名,图标), {菜单项:urls,...}
     mproject1 = (('工作', 'fa-cog'),
-                 {'关键词图谱': 'keywordmap', '文献检索': 'researcher', })
+                 {'关键词图谱': 'keywordmap', '文献检索': 'search', })
     mproject2 = (('成果', 'fa-wrench'),
                  {'知识体系': 'url1', '医学术语表': 'url2', '药物关联': 'url3'})
     # [(文字，图，url),...]
@@ -61,24 +62,30 @@ def default_mainpage_data():
     return context
 
 
-
-def index(request):
+def template_index(request, container=None):
     '''
-    初始化页面，用于显示摘要信息
+    模块化的index
     :param request:
     :return:
     '''
-    template = loader.get_template(app_name + '/index.html')
+    t_index = loader.get_template(app_name + '/FW_index_template.html')
+    t_slider = loader.get_template(app_name + '/FW_silder_template.html')
+
+    # 切换通用生成页面和 特定生成页面
+    if (container == None):
+        t_container = abstractpage(None)
+    else:
+        t_container = container
 
     # (菜单名,图标), {菜单项:urls,...}
-    mproject1 = (('工作', 'fa-cog'),
-                 {'关键词图谱': 'keywordmap', '文献检索': 'researcher', })
-    mproject2 = (('成果', 'fa-wrench'),
-                 {'知识体系': 'url1', '医学术语表': 'url2', '药物关联': 'url3'})
-    # [(文字，图，url),...]
-    # rt_info = [('疫情趋势', 'fa-chart-area', 'rtinfo'), ('各国数据', 'fa-table', 'url2')]
+    prepdata = default_mainpage_data()
 
-    return HttpResponse(template.render(default_mainpage_data(), request))
+    context = {
+        "silder_template": t_slider.render(prepdata),
+        "container_template": t_container
+    }
+
+    return HttpResponse(t_index.render(context, request))
 
 
 def abstractpage(request):
@@ -144,8 +151,59 @@ def researcher(request):
     :return:
     '''
     container = loader.get_template(app_name + '/cont_researcher.html')
-
     return HttpResponse(container.render())
+
+
+def template_search(request):
+    '''
+    对researcher模块化的实现
+
+    :param request:
+    :return:
+    '''
+    container = loader.get_template(app_name + '/FW_search_template.html').render()
+
+    return HttpResponse(template_index(request, container=container))
+
+
+def template_research_deatil(request):
+    '''
+    响应/search页面的请求，显示文献的详细信息
+    :param request:
+    :return:
+    '''
+
+    if (request.method == "GET"):
+        doi = request.GET['doi']
+        print('input doi:[{}]'.format(doi))
+
+    # 在此处查找论文，同时渲染前端
+    res = searchword_engine(word='COVID-19')
+
+    article=res['result'][0]
+
+
+    # 对数据的一些小修改
+    ## 需要对检索结果的entity 进行去重
+    entity = article['entity']
+    entity_brief = []
+    for x in entity:
+        if (x not in entity_brief):
+            entity_brief.append(x)
+    article['entity']=entity_brief
+
+    ## doi信息修复
+    doi=article['doi']
+    doi=doi[5:-1]
+    article['doi']=doi
+
+    # 构建内容，渲染网页
+    context = {
+        'data': article,
+    }
+    container = loader.get_template(app_name + '/FW_search_detail_template.html').render(context)
+
+    return HttpResponse(template_index(request, container=container))
 
 
 def keywordmappage(request):
@@ -156,6 +214,12 @@ def keywordmappage(request):
     '''
     container = loader.get_template(app_name + '/cont_keywordmap.html')
     return HttpResponse(container.render(default_mainpage_data(), request))
+
+
+def template_keywordmappage(request):
+    container = loader.get_template(app_name + '/cont_keywordmap.html').render()
+    gen_page = template_index(request, container=container)
+    return HttpResponse(gen_page)
 
 
 def keywordmapdata(request):
@@ -169,14 +233,20 @@ def keywordmapdata(request):
     return JsonResponse(relation, safe=False)
 
 
+@csrf_exempt
 def request_doclist(request):
     '''
     用于响应用户的POST请求，同时根据用户的参数，返回所需的json信息
 
     :param request:
-    :return:
+    :return: 返回数据项的关键词包括[total_num, result]，其中result是一个列表，记录了搜索结果，每一项包括12个成员
+    这里的total_num是不准确的，需谨记
+    搜索实例的成员:
+    doc_class, entity, abstract_entity, publisher, publisher_num, doi, date, title, auther, institution, abstract, keyword
+
     '''
     if (request.method == "POST"):
+        print(request.POST)
         mode = request.POST['mode']
         info = request.POST['info']
 
@@ -185,12 +255,18 @@ def request_doclist(request):
         #         "entity": "mpro"
         #     }
         if ("check_class" == mode):
-            return JsonResponse(searchfilter_engine({"doc_class": info}), safe=False)
+            json_str = searchfilter_engine({"doc_class": info})
+            return JsonResponse(json_str['result'], safe=False)
 
         if ("check_entry" == mode):
-            return JsonResponse(searchfilter_engine({"entity": info}), safe=False)
+            # json_str=searchfilter_engine({"entity": info})
+            json_str = searchword_engine(info)
+            return JsonResponse(json_str['result'], safe=False)
+
+        return JsonResponse("error", safe=False)
 
 
+@csrf_exempt
 def request_graph(request):
     '''
     返回对图的查询信息

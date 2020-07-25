@@ -4,14 +4,16 @@ from . import views
 ## 指定url次级路径
 app_name = 'Entry_FW'
 urlpatterns = [
-    path('', views.index, name='index'),
+    path('', views.template_index, name='index'),
     path('abstract', views.abstractpage, name="abstract"),
-    path('researcher', views.researcher, name='researcher'),
-    path('keywordmap', views.keywordmappage, name='keywordmap'),
+    path('search', views.template_search, name='search'),
+    path('keywordmap', views.template_keywordmappage, name='keywordmap'),
     path('keywordrel_data', views.keywordmapdata, name='keywordrel_data'),
+    path('research_detail',views.template_research_deatil,name='researhc_detail'),
     path('test', views.test, name='test_port'),
     path('request_doclist', views.request_doclist, name='request_doclist'),
     path('request_graph', views.request_graph, name='request_graph'),
+
     # path('<int:question_id>/', views.detail, name='detail'),
     # path('<int:question_id>/results/', views.results, name='results'),
 ]
