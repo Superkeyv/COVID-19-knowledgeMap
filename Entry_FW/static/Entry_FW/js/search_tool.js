@@ -213,7 +213,7 @@ function load_style2(search_params) {
 
                                 + '<dl class="articleBox" style="display: block;">'
                                 + '<style type="text/css">'
-                                + ' a {'
+                                + ' .chg {'
                                 + '   margin: 7px;'
                                 + '   border-bottom-color: rgb(169,182,181);'
                                 + '   border-bottom-style: dotted;'
@@ -225,10 +225,10 @@ function load_style2(search_params) {
                                 // 文章索引号
                                 //文章标题
                                 + '<dt class="mb5">'
-                                + '<a class="smal_tip">'
+                                + '<a class="smal_tip chg">'
                                 + (index + 1)
                                 + '</a>'
-                                + '  <a class="toe" target="_blank" href="/research_detail?doi=' + row['doi'] + '">'
+                                + '  <a class="toe chg" target="_blank" href="/research_detail?doi=' + row['doi'] + '">'
                                 + '[' + row['title'] + ']'
                                 + '  </a>'
                                 + '</dt>'
@@ -236,18 +236,18 @@ function load_style2(search_params) {
                                 + '<dd class="sel"></dd>'
 
                                 + '<dd class="actor-dd">'
-                                + '  <a target="_blank">'
+                                + '  <a class="chg" target="_blank">'
                                 + row['publisher']
                                 + '  </a>'
                                 + '</dd>'
                                 + '<dd class="actor-dd">'
-                                + '   <a target="_blank">'
+                                + '   <a class="chg" target="_blank">'
                                 + get_brief_str(row['institution'], 300)
                                 + '   </a>'
                                 + '</dd>'
                                 + '<dd class="actor-dd>'
                                 + '  <strong class="vm">作者：</strong>'
-                                + '     <a>'
+                                + '     <a class="chg">'
                                 + get_brief_str(row['author'], 300)
                                 + '     </a>'
                                 // + '  <a target="_blank" title="F F Chen;">F F Chen</a>'

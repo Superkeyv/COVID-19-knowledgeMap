@@ -76,6 +76,7 @@ def get_graph(word="Corona Virus Disease 2019",max_node=10):
     :param max_node:
     :return:
     '''
+    relation_dict = read_relation()
     tmp_list=relation_dict.get(word,[])
     sorted_list=sorted(tmp_list,key=lambda x:x["value"],reverse=True)
     filter_list=[sorted_list[i] for i in range(min(max_node,len(sorted_list)))]

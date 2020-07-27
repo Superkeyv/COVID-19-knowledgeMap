@@ -228,8 +228,13 @@ def keywordmapdata(request):
     :param request:
     :return:
     '''
-    relation = read_relation()
-
+    data_dict={}
+    if(request.method=="GET"):
+        data_dict=request.GET
+    if(data_dict.get("word","")):
+        relation = get_graph(word=data_dict.get("word",""))
+    else:
+        relation = get_graph()
     return JsonResponse(relation, safe=False)
 
 
