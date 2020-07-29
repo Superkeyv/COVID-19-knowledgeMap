@@ -42,9 +42,9 @@ def default_mainpage_data():
     '''
     # (菜单名,图标), {菜单项:urls,...}
     mproject1 = (('工作', 'fa-cog'),
-                 {'关键词图谱': 'keywordmap', '文献检索': 'search', })
-    mproject2 = (('成果', 'fa-wrench'),
-                 {'知识体系': 'url1', '医学术语表': 'url2', '药物关联': 'url3'})
+                 {'关键词图谱': 'keywordmap', })
+    mproject2 = (('检索', 'fa-wrench'),
+                 {'关键词、实体检索': 'search', '类别检索': 'search_class', })
     # [(文字，图，url),...]
     # rt_info = [('疫情趋势', 'fa-chart-area', 'rtinfo'), ('各国数据', 'fa-table', 'url2')]
 
@@ -52,7 +52,7 @@ def default_mainpage_data():
         'title': 'COVID-19知识图谱',
         'projects': [
             mproject1,
-            # mproject2,
+            mproject2,
         ],
         # 'rt_info': rt_info,
         'container': abstractpage(None)
@@ -166,6 +166,32 @@ def template_search(request):
     return HttpResponse(template_index(request, container=container))
 
 
+def template_search_class(request):
+    '''
+    通过类别进行检索的页面。在主体部分，增加了类别按钮，每个按钮对应一个类别， 通过事件相应获取对应的类别，更新页面
+    :param request:
+    :return:
+    '''
+
+    # 分类名称，代号，色系 (primary,success,info,warning,danger,secondary)
+    class_list = [
+        ('有机体', 'A', 'danger'),
+        ('解剖学', 'B', 'primary'),
+        ('疾病', 'C', 'success'),
+        ('化学药物', 'D', 'info'),
+        ('分析诊断，治疗技术', 'E', 'warning'),
+        ('现象与过程', 'F', 'secondary'),
+    ]
+
+    context={
+        'classlist':class_list,
+    }
+
+    container = loader.get_template(app_name + '/FW_search_class_template.html').render(context)
+
+    return HttpResponse(template_index(request, container=container))
+
+
 def template_research_deatil(request):
     '''
     响应/search页面的请求，显示文献的详细信息
@@ -180,8 +206,7 @@ def template_research_deatil(request):
     # 在此处查找论文，同时渲染前端
     res = searchword_engine(word='COVID-19')
 
-    article=res['result'][0]
-
+    article = res['result'][0]
 
     # 对数据的一些小修改
     ## 需要对检索结果的entity 进行去重
@@ -190,12 +215,12 @@ def template_research_deatil(request):
     for x in entity:
         if (x not in entity_brief):
             entity_brief.append(x)
-    article['entity']=entity_brief
+    article['entity'] = entity_brief
 
     ## doi信息修复
-    doi=article['doi']
-    doi=doi[5:-1]
-    article['doi']=doi
+    doi = article['doi']
+    doi = doi[5:-1]
+    article['doi'] = doi
 
     # 构建内容，渲染网页
     context = {
@@ -228,11 +253,11 @@ def keywordmapdata(request):
     :param request:
     :return:
     '''
-    data_dict={}
-    if(request.method=="GET"):
-        data_dict=request.GET
-    if(data_dict.get("word","")):
-        relation = get_graph(word=data_dict.get("word",""))
+    data_dict = {}
+    if (request.method == "GET"):
+        data_dict = request.GET
+    if (data_dict.get("word", "")):
+        relation = get_graph(word=data_dict.get("word", ""))
     else:
         relation = get_graph()
     return JsonResponse(relation, safe=False)
@@ -255,17 +280,19 @@ def request_doclist(request):
         mode = request.POST['mode']
         info = request.POST['info']
 
-        #     booldata={
-        #         "doc_class": "a",
-        #         "entity": "mpro"
-        #     }
-        if ("check_class" == mode):
-            json_str = searchfilter_engine({"doc_class": info})
+        if ("check_query" == mode):
+            # 常规检索，这个是匹配摘要部分
+            json_str = searchword_engine(word=info)
             return JsonResponse(json_str['result'], safe=False)
 
         if ("check_entry" == mode):
-            # json_str=searchfilter_engine({"entity": info})
-            json_str = searchword_engine(info)
+            # 根据实体进行检索，在标注的实体词中进行检索
+            json_str=searchfilter_engine({"entity": info})
+            return JsonResponse(json_str['result'], safe=False)
+
+        if("check_class"==mode):
+            # 根据类别进行检索，这个是按照已经整理的文献类别
+            json_str = searchfilter_engine({"doc_class": info})
             return JsonResponse(json_str['result'], safe=False)
 
         return JsonResponse("error", safe=False)

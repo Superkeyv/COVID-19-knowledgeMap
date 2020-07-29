@@ -7,6 +7,7 @@ urlpatterns = [
     path('', views.template_index, name='index'),
     path('abstract', views.abstractpage, name="abstract"),
     path('search', views.template_search, name='search'),
+    path('search_class',views.template_search_class,name='search_class'),
     path('keywordmap', views.template_keywordmappage, name='keywordmap'),
     path('keywordrel_data', views.keywordmapdata, name='keywordrel_data'),
     path('research_detail',views.template_research_deatil,name='researhc_detail'),
